@@ -12,7 +12,7 @@ st.title('Distribution Fitting App')
 # Sidebar options before file upload
 Relative_Spectral_Sensitivity = st.sidebar.slider('Relative Spectral Sensitivity', min_value=0.01, max_value=1.00, value=0.70)
 num_bins = st.sidebar.slider('Number of bins', min_value=10, max_value=100, value=50)
-hist_color = st.sidebar.color_picker('Pick a color for the histogram', '#F7D106')
+hist_color = st.sidebar.color_picker('Pick a color for the histogram', '#000000')
 maxfev_value_k_dist = st.sidebar.slider('maxfev for fitting K distribution', min_value=800, max_value=10000, value=800)
 maxfev_value_gamma_gamma = st.sidebar.slider('maxfev for fitting Gamma-Gamma distribution', min_value=800, max_value=10000, value=1000)
 
@@ -143,23 +143,26 @@ if uploaded_file is not None:
         # Show the plot
         st.pyplot(plt)
 
-        # Print R^2 results and parameters
-        st.write("Goodness-of-Fit (R^2) Results:")
+        # Create a DataFrame for the R² results and parameters
+        table_data = []
         for name, (r2, *params) in results:
-            st.write(f"{name} Distribution: R^2 = {r2}")
             if name == "Normal":
-                st.write(f"(µX = {params[0]}, σ²X = {params[1]}, σ²I = {params[1]})")
+                params_str = f"(µX = {params[0]}, σ²X = {params[1]}, σ²I = {params[1]})"
             elif name == "Log-normal":
-                st.write(f"(µX = {params[0]}, σ²X = {params[1]}, σ²I = {params[1]})")
+                params_str = f"(µX = {params[0]}, σ²X = {params[1]}, σ²I = {params[1]})"
             elif name == "Gamma":
-                st.write(f"(θ = {params[0]}, k = {params[1]}, σ²I = {params[0]**2})")
+                params_str = f"(θ = {params[0]}, k = {params[1]}, σ²I = {params[0]**2})"
             elif name == "K dist":
-                st.write(f"(α = {params[0]}, σ²I = {params[1]})")
+                params_str = f"(α = {params[0]}, σ²I = {params[1]})"
             elif name == "Weibull":
-                st.write(f"(β = {params[0]}, η = {params[1]}, σ²I = {params[0]**2})")
+                params_str = f"(β = {params[0]}, η = {params[1]}, σ²I = {params[0]**2})"
             elif name == "Exp. Weibull":
-                st.write(f"(α = {params[0]}, β = {params[1]}, η = {params[2]}, σ²I = {params[1]**2})")
+                params_str = f"(α = {params[0]}, β = {params[1]}, η = {params[2]}, σ²I = {params[1]**2})"
             elif name == "Gamma-Gamma":
-                st.write(f"(α = {params[0]}, β = {params[1]}, σ²I = {params[2]})")
+                params_str = f"(α = {params[0]}, β = {params[1]}, σ²I = {params[2]})"
             elif name == "Gen. Gamma":
-                st.write(f"(a = {params[0]}, d = {params[1]}, p = {params[2]}, σ²I = {params[2]**2})")
+                params_str = f"(a = {params[0]}, d = {params[1]}, p = {params[2]}, σ²I = {params[2]**2})"
+            table_data.append([name, r2, params_str])
+
+        df_results = pd.DataFrame(table_data, columns=["Distribution", "R²", "Parameters"])
+        st.table(df_results)
