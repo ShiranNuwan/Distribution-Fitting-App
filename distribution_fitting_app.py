@@ -9,6 +9,13 @@ from scipy.special import gamma as gamma_func
 # Streamlit app
 st.title('Distribution Fitting App')
 
+# Sidebar options before file upload
+Relative_Spectral_Sensitivity = st.sidebar.slider('Relative Spectral Sensitivity', min_value=0.01, max_value=1.00, value=0.70)
+num_bins = st.sidebar.slider('Number of bins', min_value=10, max_value=100, value=50)
+hist_color = st.sidebar.color_picker('Pick a color for the histogram', '#000000')
+maxfev_value_k_dist = st.sidebar.slider('maxfev for fitting K distribution', min_value=800, max_value=10000, value=800)
+maxfev_value_gamma_gamma = st.sidebar.slider('maxfev for fitting Gamma-Gamma distribution', min_value=800, max_value=10000, value=1000)
+
 # File upload
 uploaded_file = st.file_uploader('Upload a CSV file', type='csv')
 
@@ -31,21 +38,15 @@ if uploaded_file is not None:
         # Assuming the Power column is named 'Power'
         output_power = data['Power']
 
-        # Option to change Relative Spectral Sensitivity
-        Relative_Spectral_Sensitivity = st.sidebar.slider('Relative Spectral Sensitivity', min_value=0.01, max_value=1.00, value=0.70)
-
         # Normalize the Power data by dividing by Relative spectral sensitivity
         power_data = (output_power / Relative_Spectral_Sensitivity)
 
         # Normalize the 'Power' column by dividing by its mean
         normalized_power = power_data / power_data.mean()
 
-        # Option to change the number of bins
-        num_bins = st.sidebar.slider('Number of bins', min_value=10, max_value=100, value=50)
-
         # Plot the normalized histogram
         plt.clf()  # Clear the plot before plotting new data
-        hist, bins, _ = plt.hist(normalized_power, bins=num_bins, density=True, alpha=0.75, edgecolor='black')
+        hist, bins, _ = plt.hist(normalized_power, bins=num_bins, density=True, alpha=0.75, edgecolor='black', color=hist_color)
 
         # Calculate bin centers
         bin_centers = (bins[:-1] + bins[1:]) / 2
@@ -109,7 +110,6 @@ if uploaded_file is not None:
             def k_dist_pdf(x, mu, sigma, nu):
                 return 2 * (x ** nu) * np.exp(- (x ** 2 + mu ** 2) / (2 * sigma ** 2)) * (1 / (sigma ** 2)) ** nu
 
-            maxfev_value_k_dist = st.sidebar.slider('maxfev for fitting K distribution', min_value=800, max_value=10000, value=800)
             params, _ = curve_fit(k_dist_pdf, bin_centers, hist, p0=[1, 1, 1], maxfev=maxfev_value_k_dist)
             p = k_dist_pdf(bin_centers, *params)
             plt.plot(bin_centers, p, 'orange', linewidth=2, label='K dist')
@@ -120,7 +120,6 @@ if uploaded_file is not None:
             def gamma_gamma_pdf(x, alpha, beta, a, d):
                 return (x ** (a - 1)) * ((1 + (x / beta) ** d) ** - (alpha + a)) * (d * (beta ** -a)) / gamma_func(a)
 
-            maxfev_value_gamma_gamma = st.sidebar.slider('maxfev for fitting Gamma-Gamma distribution', min_value=800, max_value=10000, value=1000)
             params, _ = curve_fit(gamma_gamma_pdf, bin_centers, hist, p0=[1.0, 1.0, 1.0, 1.0], maxfev=maxfev_value_gamma_gamma)
             p = gamma_gamma_pdf(bin_centers, *params)
             plt.plot(bin_centers, p, 'brown', linewidth=2, label='Gamma-Gamma')
