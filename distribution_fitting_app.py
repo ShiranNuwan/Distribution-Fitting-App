@@ -11,7 +11,17 @@ st.title('Distribution Fitting App')
 
 # Options for user input before uploading CSV
 Relative_Spectral_Sensitivity = st.sidebar.slider('Relative Spectral Sensitivity', min_value=0.01, max_value=1.00, value=0.70)
-num_bins = st.sidebar.slider('Number of bins', min_value=10, max_value=1000, value=50)
+
+# Sidebar input for number of bins using slider and number input
+st.sidebar.title("Histogram Settings")
+
+num_bins_slider = st.sidebar.slider('Number of bins (slider)', min_value=10, max_value=100, value=50)
+num_bins_input = st.sidebar.number_input('Number of bins (input)', min_value=10, max_value=100, value=num_bins_slider)
+
+# Ensure slider and number input are in sync
+if num_bins_slider != num_bins_input:
+    num_bins_slider = num_bins_input
+
 maxfev_value_k_dist = st.sidebar.slider('maxfev for fitting K distribution', min_value=800, max_value=10000, value=800)
 maxfev_value_gamma_gamma = st.sidebar.slider('maxfev for fitting Gamma-Gamma distribution', min_value=800, max_value=10000, value=1000)
 hist_color = st.sidebar.color_picker('Pick a color for the histogram', '#00f900')
