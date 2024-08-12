@@ -62,6 +62,12 @@ if uploaded_file is not None:
             r_squared = 1 - (ss_reg / ss_tot)
             return r_squared
 
+        # Define a function to calculate RMSE
+        def calculate_rmse(fm, fp):
+            mse = np.mean((fm - fp) ** 2)
+            rmse = np.sqrt(mse)
+            return rmse
+
         # Prepare table data
         table_data = []
 
@@ -70,42 +76,48 @@ if uploaded_file is not None:
         p = norm.pdf(bin_centers, mu, std)
         plt.plot(bin_centers, p, 'r--', linewidth=2, label='Normal')
         r_squared_normal = calculate_r_squared(hist, p)
-        table_data.append(["Normal", r_squared_normal, f"µ = {mu}, σ = {std}"])
+        rmse_normal = calculate_rmse(hist, p)
+        table_data.append(["Normal", r_squared_normal, rmse_normal, f"µ = {mu}, σ = {std}"])
 
         # Fit and plot a log-normal distribution
         shape, loc, scale = lognorm.fit(normalized_power)
         p = lognorm.pdf(bin_centers, shape, loc, scale)
         plt.plot(bin_centers, p, 'b--', linewidth=2, label='Log-normal')
         r_squared_lognormal = calculate_r_squared(hist, p)
-        table_data.append(["Log-normal", r_squared_lognormal, f"shape = {shape}, scale = {scale}, loc = {loc}"])
+        rmse_lognormal = calculate_rmse(hist, p)
+        table_data.append(["Log-normal", r_squared_lognormal, rmse_lognormal, f"shape = {shape}, scale = {scale}, loc = {loc}"])
 
         # Fit and plot a gamma distribution
         a, loc, scale = gamma.fit(normalized_power)
         p = gamma.pdf(bin_centers, a, loc, scale)
         plt.plot(bin_centers, p, 'g--', linewidth=2, label='Gamma')
         r_squared_gamma = calculate_r_squared(hist, p)
-        table_data.append(["Gamma", r_squared_gamma, f"a = {a}, scale = {scale}, loc = {loc}"])
+        rmse_gamma = calculate_rmse(hist, p)
+        table_data.append(["Gamma", r_squared_gamma, rmse_gamma, f"a = {a}, scale = {scale}, loc = {loc}"])
 
         # Fit and plot a Weibull distribution
         c, loc, scale = weibull_min.fit(normalized_power)
         p = weibull_min.pdf(bin_centers, c, loc, scale)
         plt.plot(bin_centers, p, 'y--', linewidth=2, label='Weibull')
         r_squared_weibull = calculate_r_squared(hist, p)
-        table_data.append(["Weibull", r_squared_weibull, f"c = {c}, scale = {scale}, loc = {loc}"])
+        rmse_weibull = calculate_rmse(hist, p)
+        table_data.append(["Weibull", r_squared_weibull, rmse_weibull, f"c = {c}, scale = {scale}, loc = {loc}"])
 
         # Fit and plot an Exponential Weibull distribution
         a, c, loc, scale = exponweib.fit(normalized_power, floc=0)
         p = exponweib.pdf(bin_centers, a, c, loc, scale)
         plt.plot(bin_centers, p, 'c--', linewidth=2, label='Exp. Weibull')
         r_squared_exp_weibull = calculate_r_squared(hist, p)
-        table_data.append(["Exp. Weibull", r_squared_exp_weibull, f"a = {a}, c = {c}, scale = {scale}, loc = {loc}"])
+        rmse_exp_weibull = calculate_rmse(hist, p)
+        table_data.append(["Exp. Weibull", r_squared_exp_weibull, rmse_exp_weibull, f"a = {a}, c = {c}, scale = {scale}, loc = {loc}"])
 
         # Fit and plot a Generalized Gamma distribution
         a, c, loc, scale = gengamma.fit(normalized_power)
         p = gengamma.pdf(bin_centers, a, c, loc, scale)
         plt.plot(bin_centers, p, 'm--', linewidth=2, label='Gen. Gamma')
         r_squared_gen_gamma = calculate_r_squared(hist, p)
-        table_data.append(["Gen. Gamma", r_squared_gen_gamma, f"a = {a}, c = {c}, scale = {scale}, loc = {loc}"])
+        rmse_gen_gamma = calculate_rmse(hist, p)
+        table_data.append(["Gen. Gamma", r_squared_gen_gamma, rmse_gen_gamma, f"a = {a}, c = {c}, scale = {scale}, loc = {loc}"])
 
         # K distribution fitting
         def k_dist_pdf(x, mu, sigma, nu):
@@ -115,7 +127,8 @@ if uploaded_file is not None:
         p = k_dist_pdf(bin_centers, *params)
         plt.plot(bin_centers, p, 'orange', linewidth=2, label='K dist')
         r_squared_k = calculate_r_squared(hist, p)
-        table_data.append(["K dist.", r_squared_k, f"mu = {params[0]}, sigma = {params[1]}, nu = {params[2]}"])
+        rmse_k = calculate_rmse(hist, p)
+        table_data.append(["K dist.", r_squared_k, rmse_k, f"mu = {params[0]}, sigma = {params[1]}, nu = {params[2]}"])
 
         # Gamma-Gamma distribution fitting
         def gamma_gamma_pdf(x, alpha, beta, a, d):
@@ -125,7 +138,8 @@ if uploaded_file is not None:
         p = gamma_gamma_pdf(bin_centers, *params)
         plt.plot(bin_centers, p, 'brown', linewidth=2, label='Gamma-Gamma')
         r_squared_gamma_gamma = calculate_r_squared(hist, p)
-        table_data.append(["Gamma-Gamma", r_squared_gamma_gamma, f"alpha = {params[0]}, beta = {params[1]}, a = {params[2]}, d = {params[3]}"])
+        rmse_gamma_gamma = calculate_rmse(hist, p)
+        table_data.append(["Gamma-Gamma", r_squared_gamma_gamma, rmse_gamma_gamma, f"alpha = {params[0]}, beta = {params[1]}, a = {params[2]}, d = {params[3]}"])
 
         # Add legend
         plt.legend()
@@ -134,9 +148,9 @@ if uploaded_file is not None:
         st.pyplot(plt)
 
         # Create the results DataFrame
-        columns = ["Distribution", "Goodness-of-Fit (R^2)", "Parameters"]
+        columns = ["Distribution", "Goodness-of-Fit (R^2)", "RMSE", "Parameters"]
         results_df = pd.DataFrame(table_data, columns=columns)
 
         # Display the results DataFrame
-        st.subheader("Goodness-of-Fit (R^2) Results:")
+        st.subheader("Goodness-of-Fit (R^2) and RMSE Results:")
         st.dataframe(results_df)
